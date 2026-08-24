@@ -1,14 +1,16 @@
 import { StatusBar } from 'expo-status-bar';
 import { useState } from 'react';
-import { StyleSheet, Text, View, Button, TextInput, Alert, Pressable} from 'react-native';
+import { StyleSheet, Text, View, Button, TextInput, Alert, Pressable, FlatList,} from 'react-native';
+
+
 
 export default function App() {
 
-  const [msg, setMsg] = useState("");
   const [number1, setNumber1] = useState("");
   const [number2, setNumber2] = useState("");
   const [result, setResult] = useState("0");
   const [symbol, setSymbol] = useState("+");
+  const [history, setHistory] = useState<string[]>([]);
 
   function calculate(){
     if(number1 === '' || number2 === ''){
@@ -17,29 +19,38 @@ export default function App() {
 
     const n1 = parseFloat(number1);
     const n2 = parseFloat(number2);
+    let newResult = 0;
     
     switch(symbol){
-      case '+': setResult((n1 + n2).toString());
+      case '+': newResult = n1 + n2;
         break;
-      case '-': setResult((n1 - n2).toString());
+      case '-': newResult = n1 - n2;
        break;
-      case 'x': setResult((n1 * n2).toString());
+      case 'x': newResult = n1 * n2;
       break;
       case '/': 
       if(n2 !== 0){
-        setResult((n1 / n2).toString());
+        newResult = n1 / n2;
       }else{
-        Alert.alert("Divison by 0 is impossible");
+        Alert.alert("Division by 0 is impossible");
+        return;
       }
       
       break;
     }
+    setResult(newResult.toString());
+    addToHistory(symbol,number1,number2,newResult.toString());
   }
+  function addToHistory(symbol: string, number1: string, number2: string, result: string){
+    setHistory([number1 + " "+ symbol + " " + number2 + " = " + result, ...history].slice(0, 10));
+  }
+
   function resetCalculator(){
     setNumber1("");
     setNumber2("");
     setResult("0");
     setSymbol("+");
+    setHistory([]);
   }
     
 
@@ -50,7 +61,19 @@ return (
     {/* The title of the app */}
     <View style={styles.header}>
       <Text style={styles.title}>Assignment 1</Text>
-      <Button title="Next" />
+      <Text style={styles.subTitle}>History</Text>
+      <FlatList
+      style={styles.historyList}
+      contentContainerStyle={styles.historyListContent}
+      data={history}
+      keyExtractor={(item, index) => index.toString()}
+      renderItem={({item}) =>
+        <View style={styles.historyItem}>
+          <Text style={styles.historyItemText}>{item}</Text>
+        </View>
+      }
+      />
+
     </View>
 
     {/* Calculator */}
@@ -58,6 +81,7 @@ return (
       <View style={styles.resultContainer}>
         <Text style={styles.resultLabel}>Result</Text>
         <Text style={styles.resultText}>{result}</Text>
+        
       </View>
 
       <View style={styles.inputRow}>
@@ -116,6 +140,35 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#F2F2F7',
   },
+  subTitle:{
+    fontSize: 15,
+    fontWeight: 'bold',
+    color: '#1C1C1E',
+  },
+  historyList: {
+  width: '100%',
+  maxHeight: 150,
+},
+historyListContent: {
+  paddingHorizontal: 20,
+  gap: 6,
+},
+historyItem: {
+  backgroundColor: '#FFFFFF',
+  borderRadius: 10,
+  paddingVertical: 8,
+  paddingHorizontal: 14,
+  shadowColor: '#000',
+  shadowOffset: { width: 0, height: 1 },
+  shadowOpacity: 0.05,
+  shadowRadius: 4,
+  elevation: 1,
+},
+historyItemText: {
+  fontSize: 14,
+  color: '#3A3A3C',
+  textAlign: 'center',
+},
   header: {
     justifyContent: 'flex-start',
     flex: 1,
